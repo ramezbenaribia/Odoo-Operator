@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      name: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.appName }}
+    spec:
+      serviceAccountName: odoo-acc
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8007
+             
+
+          env:
+            - name: "URI_DEFAULT_PREFIX"
+              value: "/odoo-operator"
+
+            - name: "PROJECT_NAME"
+              value: "Odoo Operator"
+
+            - name: "BACKEND_CORS_ORIGINS"
+              value: '["*"]'
+
+            - name: "PRIVATE_KEY_FILE"
+              value: "/secrets/keys/tls.key"
+
+            - name: "CERTIFICATE_FILE"
+              value: "/secrets/keys/tls.crt"
+
+            - name: "CA_FILE"
+              value: "/secrets/keys/ca.crt"
+
+            - name: "AIOHTTP_USE_SSL"
+              value: "true"

@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: odoo-acc
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: odoo-rc
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    # resources: ["secrets", "configmaps", "services"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["apps"]
+    # resources: ["deployments", "statefulsets"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["operators.com"]
+    resources: ["odoos"]
+    verbs: ["*"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: odoo-crb
+subjects:
+  - kind: ServiceAccount
+    name: odoo-acc
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: odoo-rc

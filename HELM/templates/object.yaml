@@ -1,0 +1,64 @@
+# apiVersion: operators.com/v1
+# kind: OdooRule
+# metadata:
+#   name: odoo-instances-1
+
+# image:
+#   registry: registry.gitlab.com
+#   repository: ramezbenaribia/odoo-image
+#   tag: 15.1
+# fullname: odoo
+
+# postgresql:
+#   existingSecret: odoo-postgresql
+#   enabled: true
+#   auth:
+#     username: odoo
+#     password: myodoo
+# ingress:
+#   traefik:
+#     enabled: false
+#     entry_point: websecure
+#     match: (Host(`www.ramez_operator.tech`)|| Host(`ramez_operator.tech`)) &&  PathPrefix(`/backend`)
+#     priority: 100
+#     longpooling:
+#       enabled: false
+#       match: (Host(`www.ramez_operator.tech`)|| Host(`ramez_operator.tech`)) && PathPrefix(`/longpolling`)
+
+# ingress_array:
+#   - name: ingress_instance
+#     traefik:
+#       enabled: false
+#       entry_point: websecure
+#       match: (Host(`www.ramez_operator.tech`)|| Host(`ramez_operator.tech`)) &&  PathPrefix(`/backend`)
+#       priority: 100
+#       longpooling:
+#         enabled: false
+#         match: (Host(`www.ramez_operator.tech`)|| Host(`ramez_operator.tech`)) && PathPrefix(`/longpolling`)
+
+#   - name: ingress_admin
+#     traefik:
+#       enabled: false
+#       entry_point: websecure
+#       match: (Host(`www.ramez_operator.tech`)|| Host(`ramez_operator.tech`)) &&  PathPrefix(`/backend`)
+#       priority: 100
+#       longpooling:
+#         enabled: false
+#         match: (Host(`www.ramez_operator.tech`)|| Host(`ramez_operator.tech`)) && PathPrefix(`/longpolling`)
+
+# persistence:
+#   enabled: false
+#   node:
+#     hostname: vmi520489.contaboserver.net
+#     path: /kubernetes-persistent-volume/odoo-data
+
+# certificate:
+#   enabled: false
+#   commonName: odoo
+#   dnsNames: ["odoo", "odoo.microservices"]
+#   issuerRef:
+#     name: ramez_operator-ca
+#     kind: ClusterIssuer
+
+# repository:
+#   sync_repo: git@gitlab.com:ramezbenaribia/odoo-extra-addons.git

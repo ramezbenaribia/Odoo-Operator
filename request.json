@@ -1,0 +1,62 @@
+{
+    "image": {
+        "registry": "hub.docker.com",
+        "repository": "ramezbenaribia/odoo-image",
+        "tag": 0
+    },
+    "branch": "dev",
+    "fullname": "odoo-dev",
+    "postgresql": {
+      "existingSecret": "odoo-postgresql",
+      "enabled": true,
+      "auth": {
+        "username": "odoo",
+        "password": "myodoo"
+      }
+    },
+    "ingress": {
+      "traefik": {
+        "enabled": false,
+        "entry_point": "websecure",
+        "match": "(Host(`www.ramez.tech`)|| Host(`ramez.tech`)) &&  PathPrefix(`/backend`)",
+        "priority": 100,
+        "longpooling": {
+          "enabled": true,
+          "match": "(Host(`www.ramez.tech`)|| Host(`ramez.tech`)) &&  PathPrefix(`/backend`)"
+        }
+      }
+    },
+    "ingress_instance": 
+      {
+        "traefik": {
+            "enabled": false,
+            "entry_point": "websecure",
+            "match": "PathPrefix(`/`)",
+            "priority": 100,
+            "longpooling": {
+              "enabled": true,
+              "match": "(Host(`www.ramez.tech`)|| Host(`ramez.tech`)) &&  PathPrefix(`/backend`)"
+            }
+          }
+      }
+    ,
+    "persistence": {
+      "enabled": false,
+      "node": {
+        "hostname": "hostname.com",
+        "path": "/kubernetes-persistent-volume/odoo-data"
+      }
+    },
+    "certificate": {
+      "enabled": false,
+      "commonName": "odoo",
+      "dnsNames":["odoo", "odoo.microservices"],
+      "issuerRef": {
+        "name": "ramez-ca",
+        "kind": "ClusterIssuer"
+      }
+    },
+    "repository": {
+      "sync_repo": "git@gitlab.com:ramezbenaribia/odoo-extra-addons.git"
+    }
+  }

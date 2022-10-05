@@ -1,0 +1,109 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: odoos.operators.com
+spec:
+  group: operators.com
+
+  versions:
+    - name: v1 # it's possible to provide multiple versions of a CRD
+      served: true # it's possible to disable a CRD
+      storage: true # there can be multiple versions but only one can be used to store the objects
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+          properties:
+            image:
+              type: object
+              properties:
+                registry:
+                  type: string
+                repository:
+                  type: string
+                tag:
+                  type: number
+            fullname:
+              type: string
+            branch:
+              type: string
+            postgresql:
+              type: object
+              properties:
+                existingSecret:
+                  type: string
+                enabled:
+                  type: boolean
+                auth:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                    password:
+                      type: string
+            ingress:
+              type: object
+              properties:
+                traefik:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    entry_point:
+                      type: string
+                    match:
+                      type: string
+                    priority:
+                      type: number
+                    longpooling:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        match:
+                          type: string
+            persistence:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                node:
+                  type: object
+                  properties:
+                    hostname:
+                      type: string
+                    path:
+                      type: string
+
+            certificate:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                commonName:
+                  type: string
+                dnsNames:
+                  type: array
+                  items:
+                    type: string
+                issuerRef:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    kind:
+                      type: string
+
+            repository:
+              type: object
+              properties:
+                sync_repo:
+                  type: string
+
+  scope: Namespaced # resources can be namespaced or available for the whole cluster
+  names:
+    plural: odoos
+    singular: odoo
+    kind: OdooRule # this name is being used in manifests
+    shortNames: # these short names can be used in the CLI, e.g. kubectl get er
+      - od
