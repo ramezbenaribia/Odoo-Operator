@@ -1,0 +1,379 @@
+image:
+  # registry: registry.gitlab.com
+  repository: ramezbenaribia/odoo-image
+  tag: 15
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: Always
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  pullSecrets:
+    - gitlab-registry
+
+kubeVersion:
+
+## String to partially override odoo.fullname template (will maintain the release name)
+##
+# nameOverride:
+
+## String to fully override odoo.fullname template
+##
+fullname: odoo
+
+## Deployment pod host aliases
+## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+##
+hostAliases: []
+
+## Add labels to all the deployed resources
+##
+commonLabels: {}
+
+## Add annotations to all the deployed resources
+##
+commonAnnotations: {}
+
+## Additional pod annotations
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+
+## Additional pod labels
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+##
+podLabels: {}
+
+## K8s Security Context for Odoo pods
+## https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+##
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+## K8s Security Context for Odoo container
+##
+containerSecurityContext:
+  enabled: false
+  runAsUser: 1001
+
+## Command and args for running the container (set to default if not set). Use array form
+##
+command: []
+args: []
+
+## An array to add extra env vars
+## For example:
+##
+extraEnvVars: []
+#  - name: FOO
+#    value: BAR
+
+## ConfigMap with extra environment variables
+##
+extraEnvVarsCM:
+
+## Secret with extra environment variables
+##
+extraEnvVarsSecret:
+
+## Add extra volumes
+##
+extraVolumes:
+  - name: odoo-extra-addons
+    emptyDir: {}
+  # - name: gitlab-credential
+  #   secret:
+  #     secretName: ssh-gitlab-credential
+  #     defaultMode: 0400
+
+## Add extra volume mounts
+##
+extraVolumeMounts:
+  - name: odoo-extra-addons
+    mountPath: /ramez-operator-extra-addons/extra-addons
+
+## SMTP mail delivery configuration
+## ref: https://github.com/bitnami/bitnami-docker-odoo/#smtp-configuration
+# smtpHost:
+# smtpPort:
+# smtpUser:
+# smtpPassword:
+# smtpProtocol:
+
+## Use existing secret for the application password
+##
+existingSecret:
+
+externalDatabase:
+  ## All of these values are only used when postgresql.enabled is set to false
+  ## Database host
+  ##
+  host: postgresql.database
+
+  ## non-root Username for Odoo database
+  ##
+  user: odoo
+
+  ## Database port number
+  ##
+  port: 5432
+
+##
+## PostgreSQL chart configuration
+##
+## https://github.com/bitnami/charts/blob/master/bitnami/postgresql/values.yaml
+##
+postgresql:
+  existingSecret: odoo-postgresql
+  enabled: true
+  ## PostgreSQL password
+  ## ref: https://hub.docker.com/_/postgres/
+  ##
+
+  # postgresqlPassword: superset
+
+  auth:
+    username: odoo
+    password: myodoo
+    ## PostgreSQL password for the custom user to create. Ignored if `auth.existingSecret` with key `password` is provided
+    # password: superset
+    # ## PostgreSQL name for a custom database to create
+    # database: superset
+
+  # postgresqlUsername: ramez
+  # username: ramez
+
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    enabled: false
+    ## If you want to reuse an existing claim, you can pass the name of the PVC using
+    ## the existingClaim variable
+    ##
+    # existingClaim: your-claim
+
+    ## postgresql data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessMode: ReadWriteOnce
+    size: 8Gi
+
+## Kubernetes svc configuration
+## For minikube, set this to NodePort, elsewhere use LoadBalancer
+##
+## Use serviceLoadBalancerIP to request a specific static IP,
+## otherwise leave blank
+##
+service:
+  ## Kubernetes svc type
+  ## For minikube, set this to NodePort, elsewhere use LoadBalancer
+  ##
+  type: ClusterIP
+  ## Use serviceLoadBalancerIP to request a specific static IP,
+  ## otherwise leave blank
+  ##
+  # loadBalancerIP:
+  # HTTP Port
+  port: 80
+  ## Use nodePort to requets some specific port when using NodePort
+  ##
+  nodePort: ""
+
+  ## Enable client source IP preservation
+  ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+  ##
+  externalTrafficPolicy: Cluster
+
+  longpolling:
+    enabled: false
+    port: 8072
+
+## Configure the ingress resource that allows you to access the
+## Odoo installation. Set up the URL
+## ref: http://kubernetes.io/docs/user-guide/ingress/
+##
+ingress:
+  traefik:
+    enabled: false
+    entry_point: websecure
+    match: (Host(`www.ramezbenaribia.me`)|| Host(`ramezbenaribia.me`)) &&  PathPrefix(`/backend`)
+    middlewares: # [5]
+      - name: buffer-response-200MB@file
+      - name: www-redirect@file
+      - name: gzip-compress@file
+    priority: 100
+    longpooling:
+      enabled: false
+      match: (Host(`www.ramezbenaribia.me`)|| Host(`ramezbenaribia.me`)) && PathPrefix(`/longpolling`)
+      #      priority: 10                 # [4]
+      middlewares: # [5]
+        - name: buffer-response-200MB@file
+        - name: www-redirect@file
+        - name: gzip-compress@file
+
+ingress_instance:
+  traefik:
+    enabled: false
+    entry_point: websecure
+    match: PathPrefix(`/`)
+    middlewares: # [5]
+      - name: buffer-response-200MB@file
+      - name: www-redirect@file
+      - name: gzip-compress@file
+    priority: 2
+    longpooling:
+      enabled: true
+      match: PathPrefix(`/longpolling`)
+      priority: 5 # [4]
+      middlewares: # [5]
+        - name: buffer-response-200MB@file
+        - name: www-redirect@file
+        - name: gzip-compress@file
+
+ingress_admin:
+  traefik:
+    enabled: false
+    entry_point: admin
+    match: Host(`www.ramezbenaribia.me`)|| Host(`ramezbenaribia.me`)
+    middlewares: # [5]
+      - name: buffer-response-200MB@file
+      - name: www-redirect@file
+      - name: gzip-compress@file
+    priority: -1
+    longpooling:
+      enabled: true
+      match: (Host(`www.ramezbenaribia.me`)|| Host(`ramezbenaribia.me`)) &&  PathPrefix(`/longpolling`)
+      priority: 5 # [4]
+      middlewares: # [5]
+        - name: buffer-response-200MB@file
+        - name: www-redirect@file
+        - name: gzip-compress@file
+
+persistence:
+  enabled: false
+  ## odoo data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: "local-storage-default"
+  node:
+    hostname: vmi520489.contaboserver.net
+    path: /kubernetes-persistent-volume/odoo-data
+  accessMode: ReadWriteOnce
+  size: 90Gi
+
+## Configure resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 300m
+
+## Configure extra options for liveness and readiness probes
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes)
+##
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 600
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 10
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 10
+  successThreshold: 1
+
+## Custom liveness and readiness probes (evaluated as a template)
+##
+customLivenessProbe: {}
+customReadinessProbe: {}
+
+## Affinity for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+##
+affinity: {}
+
+## Node labels for pod assignment
+## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+nodeSelector: {}
+
+## Tolerations for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## Pod affinity preset
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+## Allowed values: soft, hard
+##
+podAffinityPreset: ""
+
+## Pod anti-affinity preset
+## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+## Allowed values: soft, hard
+##
+podAntiAffinityPreset: soft
+
+## Node affinity preset
+## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+## Allowed values: soft, hard
+##
+nodeAffinityPreset:
+  ## Node affinity type
+  ## Allowed values: soft, hard
+  ##
+  type: ""
+  ## Node label key to match
+  ## E.g.
+  ## key: "kubernetes.io/e2e-az-name"
+  ##
+  key: ""
+  ## Node label values to match
+  ## E.g.
+  ## values:
+  ##   - e2e-az1
+  ##   - e2e-az2
+  ##
+  values: []
+
+## Extra init containers to add to the deployment
+##
+initContainers: []
+
+certificate:
+  enabled: false
+  subject:
+    countries: [Tunisia]
+    organizations: [RamezBenAribia]
+  commonName: odoo
+  dnsNames: ["odoo", "odoo.microservices"]
+  issuerRef:
+    name: ramez-ca
+    kind: ClusterIssuer
+
+repository:
+  sync_repo: git@gitlab.com:ramezbenaribia/odoo-extra-addons.git
+
+## Extra sidecar containers to add to the deployment
+##
+sidecars: []

@@ -1,0 +1,28 @@
+{{- if .Values.persistence.enabled }}
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: odoo-data
+  labels:
+    type: local
+spec:
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  local:
+    path: {{ .Values.persistence.node.path }}
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+    - ReadWriteOnce
+  claimRef:
+     namespace: {{ .Release.Namespace }}
+     name: {{ template "odoo.fullname" . }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+              - {{ .Values.persistence.node.hostname }}
+{{- end -}}
