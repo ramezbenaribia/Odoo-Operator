@@ -6,7 +6,7 @@ app.egg-info/
 .coverage
 htmlcov
 tests-reports
-poetry\.lock
+Operator\poetry\.lock
 
 \.idea/
 \.pytest_cache/
